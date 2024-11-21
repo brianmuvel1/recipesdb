@@ -1,0 +1,19 @@
+{
+  "recipes": [
+    {
+      "title": "Organic New Item",
+      "category": ["Organic", "Home"],
+      "ingredients": [
+        "ingredient 1",
+        "1 tbs baking soda",
+        "20 drops Tea Tree oil"
+      ],
+      "directions": [
+        "Melt the shea butter",
+        "Add the rest of the ingredients into the melted shea butter",
+        "Mix to combine all the ingredients",
+        "Put the container in the fridge for about 2 hours or until the butter is solid"
+      ]
+    }
+  ]
+}

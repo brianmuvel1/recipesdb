@@ -1,0 +1,159 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+export const prerender = false;
+
+---
+
+<Layout title="Recipe Admin">
+  <main class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-8">
+      <h1 class="text-4xl font-bold">Recipe Admin</h1>
+      <a 
+        href="/" 
+        class="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+        </svg>
+        Home
+      </a>
+    </div>
+    
+    <div class="grid gap-8 md:grid-cols-2">
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-2xl font-semibold mb-4">Upload Recipe File</h2>
+        <form 
+          action="/api/upload" 
+          method="POST" 
+          enctype="multipart/form-data"
+          class="space-y-6"
+          id="recipeFileForm"
+        >
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Upload Recipe JSON File
+            </label>
+            <input
+              type="file"
+              name="recipeFile"
+              accept=".json"
+              required
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          
+          <button
+            type="submit"
+            class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
+          >
+            Upload Recipe File
+          </button>
+        </form>
+        <div id="fileMessage" class="mt-4 text-center hidden"></div>
+      </div>
+
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-2xl font-semibold mb-4">Paste Recipe JSON</h2>
+        <form 
+          action="/api/upload-json" 
+          method="POST"
+          class="space-y-6"
+          id="recipeJsonForm"
+        >
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Recipe JSON Content
+            </label>
+            <textarea
+              name="jsonContent"
+              required
+              rows="10"
+              placeholder="Paste your recipe JSON here..."
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            ></textarea>
+          </div>
+          
+          <button
+            type="submit"
+            class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
+          >
+            Upload JSON Content
+          </button>
+        </form>
+        <div id="jsonMessage" class="mt-4 text-center hidden"></div>
+      </div>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  const fileForm = document.getElementById('recipeFileForm') as HTMLFormElement;
+  const jsonForm = document.getElementById('recipeJsonForm') as HTMLFormElement;
+  const fileMessageDiv = document.getElementById('fileMessage');
+  const jsonMessageDiv = document.getElementById('jsonMessage');
+  
+  function showMessage(element: HTMLElement | null, success: boolean, message: string) {
+    if (!element) return;
+    element.textContent = message;
+    element.className = `mt-4 text-center p-4 rounded-md ${
+      success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+    }`;
+    element.classList.remove('hidden');
+  }
+
+  fileForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    try {
+      const formData = new FormData(fileForm);
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      const result = await response.json();
+      showMessage(fileMessageDiv, response.ok, result.message);
+      
+      if (response.ok) {
+        fileForm.reset();
+      }
+    } catch (error) {
+      showMessage(fileMessageDiv, false, 'An error occurred while uploading the file.');
+    }
+  });
+
+  jsonForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    try {
+      const formData = new FormData(jsonForm);
+      const jsonContent = formData.get('jsonContent');
+
+      // Validate JSON format
+      try {
+        JSON.parse(jsonContent as string);
+      } catch {
+        showMessage(jsonMessageDiv, false, 'Invalid JSON format');
+        return;
+      }
+
+      const response = await fetch('/api/upload-json', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ content: jsonContent }),
+      });
+      
+      const result = await response.json();
+      showMessage(jsonMessageDiv, response.ok, result.message);
+      
+      if (response.ok) {
+        jsonForm.reset();
+      }
+    } catch (error) {
+      showMessage(jsonMessageDiv, false, 'An error occurred while uploading the JSON content.');
+    }
+  });
+</script>
